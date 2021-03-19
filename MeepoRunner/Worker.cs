@@ -18,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MeepoRunner.Core;
 using static MeepoRunner.Core.Util;
+using MeepoRunner.GamePlay;
 
 namespace MeepoRunner
 {
@@ -28,6 +29,7 @@ namespace MeepoRunner
 
         public Worker(ILogger<Worker> logger)
         {
+            Setup.Start(Util.HOMEBASE.BOTTOM);
             _logger = logger;
         }
 
@@ -35,16 +37,7 @@ namespace MeepoRunner
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                Point position = Util.GetCursorPosition();
-
-                string xx = "Worker running at: {time}. Position: {pos} Color: {color}";
-                
-                _logger.LogInformation(xx, DateTimeOffset.Now, position, Util.GetColorAt(position));
-
-                Point p = new Point(position.X+50, position.Y+50);
-
-                Util.SetCursorPos(p.X, p.Y);
-
+                Board.Run();
                 await Task.Delay(1000, stoppingToken);
             }
         }
