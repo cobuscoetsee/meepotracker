@@ -9,23 +9,6 @@ namespace MeepoRunner.GamePlay
 {
     class Monitor
     {
-        // 
-        public static float Health(Point meepo)
-        {
-            // Do logic here
-            return 0.0f;
-        }
-
-        public static  float Manna(Point meepo)
-        {
-            // Do logic here
-            return 0f;
-        }
-
-        public static int MeepoCount()
-        {
-            // Do logic for MeepoCount
-            return 5;
-        }
+        public static int MeepoCount = 0;
     }
 }

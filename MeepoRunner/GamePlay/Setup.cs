@@ -1,4 +1,5 @@
 ﻿using MeepoRunner.Core;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -26,10 +27,10 @@ namespace MeepoRunner.GamePlay
 
         }
 
-        public static void SearchMeposPositions()
+        public static void SearchMeposPositions(ILogger<Worker> logger)
         {
             // Configue all the meepos positions (How can we calculate the first position of the meepo bar? ) 
-            
+            PositionMap.RecalculateMeepos(logger);
         }
     }
 }

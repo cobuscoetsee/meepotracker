@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
@@ -11,7 +12,9 @@ namespace MeepoRunner.Core
 {
     class Util
     {
-        public enum HOMEBASE {
+        private static int delay = 30;
+        public enum HOMEBASE
+        {
             TOP,
             BOTTOM
         };
@@ -41,6 +44,20 @@ namespace MeepoRunner.Core
             return screenPixel.GetPixel(0, 0);
         }
 
+        [DllImport("user32.dll")]
+        public static extern bool PrintWindow(IntPtr hWnd, IntPtr hdcBlt, int nFlags);
+
+        public static Bitmap Screenshot()
+        {
+            return Ikst.ScreenCapture.ScreenCapture.Capture(0, 0, 1920, 1080, true);
+
+        }
+
+        public static Color GetColorAtOnImage(Bitmap bmp, int x, int y)
+        {
+            return bmp.GetPixel(x, y);
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         public struct POINT
         {
@@ -66,13 +83,54 @@ namespace MeepoRunner.Core
         [DllImport("User32.Dll")]
         public static extern long SetCursorPos(int x, int y);
 
-        [DllImport("user32.dll")]
-        public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, uint dwExtraInfo);
+        public static async
+        Task
+SetCursorTo(int x, int y)
+        {
+            SetCursorPos(x, y);
+            await Task.Delay(delay);
 
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        public static extern void keybd_event(uint bVk, uint bScan, uint dwFlags, uint dwExtraInfo);
+
+        [DllImport("user32.dll")]
+        static extern bool PostMessage(IntPtr hWnd, UInt32 Msg, int wParam, int lParam);
+
+
+        [DllImport("user32.dll")]
+        public static extern int SetForegroundWindow(IntPtr hWnd);
 
         const uint KEYEVENTF_KEYUP = 0x0002;
         const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
-        public static void PressKey(int[] keys)
+
+        const UInt32 WM_KEYDOWN = 0x0100;
+        public static async Task PressKeyOnKeyboard(int[] keys)
+        {
+            if (keys is not null)
+            {
+                //press through keys
+                for (int i = 0; i < keys.Length; i++)
+                {
+                    //press the key
+                    keybd_event((byte)keys[i], 0, 0, 0);
+                }
+                await Task.Delay(delay);
+                //loop through keys
+                for (int i = 0; i < keys.Length; i++)
+                {
+                    //release the key
+                    keybd_event((byte)keys[i], 0, KEYEVENTF_KEYUP, 0);
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(keys));
+            }
+        }
+
+        public static void HoldKey(int[] keys)
         {
             //Press through keys
             for (int i = 0; i < keys.Length; i++)
@@ -80,6 +138,9 @@ namespace MeepoRunner.Core
                 //Press the key
                 keybd_event((byte)keys[i], 0, KEYEVENTF_EXTENDEDKEY | 0, 0);
             }
+        }
+        public static void ReleaseKey(int[] keys)
+        {
             //Loop through keys
             for (int i = 0; i < keys.Length; i++)
             {
@@ -97,15 +158,42 @@ namespace MeepoRunner.Core
         private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
         private const int MOUSEEVENTF_RIGHTUP = 0x10;
 
-        public static void DoMouseLeftClick()
+        public static async Task DoMouseLeftClickAsync(Point point)
         {
-            mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+            mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+            await Task.Delay(delay);
+            mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+
         }
-        public static void DoMouseRightClick()
+        public static async Task DoMouseRightClick(Point point)
         {
+            await Task.Delay(300);
             mouse_event(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+            await Task.Delay(delay);
+        }
+
+        [DllImport("gdi32.dll", CharSet = CharSet.Auto, SetLastError = true, ExactSpelling = true)]
+        public static extern int GetDeviceCaps(IntPtr hDC, int nIndex);
+
+        public enum DeviceCap
+        {
+            /// <summary>
+            /// Logical pixels inch in X
+            /// </summary>
+            LOGPIXELSX = 88,
+            /// <summary>
+            /// Logical pixels inch in Y
+            /// </summary>
+            LOGPIXELSY = 90
+
+            // Other constants may be founded on pinvoke.net
+        }
+
+        public static Size GetResolution()
+        {
+            return new Size(1920, 1080);
         }
     }
 
-    
+
 }

@@ -14,104 +14,140 @@ namespace MeepoRunner.GamePlay
          *  Will Poof meepo
          *  Need the ability to poof to specified point on minimap
          */
-        public static void Poof(Point meepo, Point whereToOnMiniMap)
+        public static async void Poof(Meepo meepo, Point whereToOnMiniMap)
         {
-            SelectMeepo(meepo);
+            await SelectMeepo(meepo);
             if (CanPoof())
             {
+                Point currentPosition = Util.GetCursorPosition();
                 // Do Poof Logic
                 // Step 1 Move mouse cursor
-                Util.SetCursorPos(whereToOnMiniMap.X, whereToOnMiniMap.Y);
+                await Util.SetCursorTo(whereToOnMiniMap.X, whereToOnMiniMap.Y);
                 // Step 2 Press hotkey
-                Util.PressKey(ShortCuts.POOF);
-            } else
+                await Util.PressKeyOnKeyboard(ShortCuts.POOF);
+                await Util.SetCursorTo(currentPosition.X, currentPosition.Y);
+                await Util.DoMouseLeftClickAsync(currentPosition);
+
+            }
+            else
             {
-                if (CanBlink())
+                if (CanBlink(meepo))
                 {
-                    Blink(whereToOnMiniMap);
-                    Dig(meepo);
+                    await Blink(meepo,whereToOnMiniMap);
+                    await Dig(meepo);
                 }
-                Dig(meepo);
+                await Dig(meepo);
             }
         }
 
         /**
          * WIll select the first meepo and blink
          */
-        public static void Blink(Point whereToOnMiniMap)
+        public static async Task Blink(Meepo meepo, Point whereToOnMiniMap)
         {
-            if (CanBlink())
+            if (CanBlink(meepo))
             {
+                await SelectMeepo(PositionMap.meepos[0]);
                 //Do Logic to Blink 
                 //Step 1 Move curser to Position to Blink To
-                GoToPosition(whereToOnMiniMap);
+                await GoToPosition(whereToOnMiniMap);
                 // Step 2 Press Shortcut (X)
-                Util.PressKey(ShortCuts.BLINK);
+                await Util.PressKeyOnKeyboard(ShortCuts.BLINK);
             } else
             {
                 //RunToBase(whereToOnMiniMap);
             }
         }
 
-        private static void GoToPosition(Point position)
+        private static async Task GoToPosition(Point position)
         {
-            Util.SetCursorPos(position.X, position.Y);
-            Util.DoMouseRightClick();
+            Point currentPosition = Util.GetCursorPosition();
+
+            await Util.SetCursorTo(position.X,position.Y);
+            await Util.DoMouseRightClick(position);
+            await Util.SetCursorTo(currentPosition.X, currentPosition.Y);
+            await Task.Delay(500);
+            await Util.DoMouseLeftClickAsync(currentPosition);
+
         }
 
         /**
          * Will tell the selected meepo to dig
          */
-        public static void Dig(Point meepo, Boolean runToBase = false)
+        public static async Task Dig(Meepo meepo, Boolean runToBase = false)
         {
-            SelectMeepo(meepo);
+            await SelectMeepo(meepo);
             if (CanDig())
             {
                 // Do Dig Logic
-                Util.PressKey(ShortCuts.DIG);
+                await Util.PressKeyOnKeyboard(ShortCuts.DIG);
             } else if (runToBase)
             {
                 // run home 
-                RunToBase(meepo);
+                await RunToBase(meepo);
             }
         }
 
         /**
          * Will take the meepo to the current defined base
          */
-        public static void RunToBase(Point meepo)
+        public static async Task RunToBase(Meepo meepo)
         {
-            SelectMeepo(meepo);
+            await SelectMeepo(meepo);
             // Do Logic To Run to Base
-            GoToPosition(PositionMap.CURRENT_BASE);
+            await GoToPosition(PositionMap.CURRENT_BASE);
             // Posibly remove from group selection
-        }
 
+        }
         /**
-         * Will try to highlight the selected meepo at the selected point
-         */
-        private static void SelectMeepo(Point meepo)
+        * Will try to highlight the selected meepo at the selected point
+        */
+        public static async Task SelectMeepo(Meepo meepo, Boolean add)
         {
             // Do logic to make sure the meepo you want stays selected by hitting Tab key we can swtich between meepos,
             // what might be quicker is to click on the meepo // Move cursor click might be distubring however if we can move curser back to original place it might be good
-            Util.SetCursorPos(meepo.X, meepo.Y);
-            Util.DoMouseLeftClick();
+            Point currentPosition = Util.GetCursorPosition();
+            await Util.SetCursorTo(meepo.position.X, meepo.position.Y);
+            if (add)
+            {
+                Util.HoldKey(ShortCuts.SHIFT);
+
+            }
+            await Util.DoMouseLeftClickAsync(meepo.position);
+            if (add)
+            {
+                Util.ReleaseKey(ShortCuts.SHIFT);
+
+            }
+            await Util.SetCursorTo(currentPosition.X, currentPosition.Y);
+            await Util.DoMouseLeftClickAsync(currentPosition);
+
+        }
+        /**
+         * Will try to highlight the selected meepo at the selected point
+         */
+        public static async Task SelectMeepo(Meepo meepo)
+        {
+            await SelectMeepo(meepo, false);
         }
 
         private static Boolean CanPoof()
         {
             // Do logic
-            return true;
+            return false;
         }
         private static Boolean CanDig()
         {
             // Do Logic
-            return true;
+            return false;
         }
-        private static Boolean CanBlink()
+        private static Boolean CanBlink(Meepo meepo)
         {
-            // Do Logic 
-            return true;
+            if (PositionMap.meepos[0].Equals(meepo))
+            {
+                return true;
+            }
+            return false;
         }
 
     }

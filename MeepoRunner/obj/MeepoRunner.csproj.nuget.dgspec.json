@@ -43,9 +43,29 @@
         "net5.0": {
           "targetAlias": "net5.0",
           "dependencies": {
+            "Ikst.ScreenCapture": {
+              "target": "Package",
+              "version": "[0.0.2, )"
+            },
             "Microsoft.Extensions.Hosting": {
               "target": "Package",
               "version": "[5.0.0, )"
+            },
+            "Serilog.AspNetCore": {
+              "target": "Package",
+              "version": "[4.0.0, )"
+            },
+            "Serilog.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[4.1.2, )"
+            },
+            "Serilog.Settings.Configuration": {
+              "target": "Package",
+              "version": "[3.1.0, )"
+            },
+            "SharpDX": {
+              "target": "Package",
+              "version": "[4.2.0, )"
             },
             "System.Drawing.Common": {
               "target": "Package",
